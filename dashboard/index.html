@@ -1,0 +1,236 @@
+<title>Bolsa NVIDIA y Figma</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: cabecera con selector de periodo → dos fichas de valor → gráfico comparativo indexado → tabla */
+:root{
+  --bg:#f6f7f8; --surface:#ffffff; --line:#e3e5e8; --grid:#eceef0;
+  --fg:#111418; --fg2:#4f5560; --muted:#7a808a;
+  --s1:#2a78d6; --s2:#eb6834;
+  --up:#0a7d3c; --down:#c4322f;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121417; --surface:#1a1d21; --line:#2c3036; --grid:#24282d;
+  --fg:#f2f3f5; --fg2:#b9bec6; --muted:#8a9099;
+  --s1:#3987e5; --s2:#d95926; --up:#3fbf74; --down:#f0716e; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121417; --surface:#1a1d21; --line:#2c3036; --grid:#24282d;
+  --fg:#f2f3f5; --fg2:#b9bec6; --muted:#8a9099;
+  --s1:#3987e5; --s2:#d95926; --up:#3fbf74; --down:#f0716e; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:14px;line-height:1.45}
+.wrap{max-width:1080px;margin:0 auto;padding-inline:16px;padding-block:24px 40px;display:grid;gap:20px}
+header{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:end;justify-content:space-between}
+h1{font-size:22px;font-weight:600;margin:0;text-wrap:balance}
+.sub{color:var(--fg2);margin:2px 0 0;font-size:13px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;background:var(--surface);padding:2px}
+.seg button{font:500 12px var(--mono);letter-spacing:.04em;border:0;background:none;color:var(--fg2);padding:6px 11px;border-radius:6px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--fg);color:var(--bg)}
+.seg button:focus-visible{outline:2px solid var(--s1);outline-offset:1px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.card,.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 18px;min-width:0}
+.card-head{display:flex;align-items:center;gap:10px}
+.sw{width:10px;height:10px;border-radius:3px;flex:none}
+.tick{font:500 12px var(--mono);letter-spacing:.06em;color:var(--fg2)}
+.name{font-weight:600}
+.exch{margin-left:auto;font:400 11px var(--mono);color:var(--muted);letter-spacing:.04em}
+.price-row{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px;margin-top:10px}
+.price{font:500 32px var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.pill{font:500 12px var(--mono);font-variant-numeric:tabular-nums;padding:3px 8px;border-radius:999px;border:1px solid currentColor}
+.pill.up{color:var(--up)} .pill.down{color:var(--down)}
+.lbl{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+.stats div{display:grid;gap:2px}
+.stats b{font:500 14px var(--mono);font-variant-numeric:tabular-nums}
+.range{margin-top:14px;display:grid;gap:6px}
+.bar{position:relative;height:6px;border-radius:3px;background:var(--grid)}
+.bar i{position:absolute;top:-4px;width:3px;height:14px;border-radius:2px;background:var(--fg);transform:translateX(-50%)}
+.range-l{display:flex;justify-content:space-between;font:400 11px var(--mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.spark{display:block;width:100%;height:56px;margin-top:12px}
+.panel h2{font-size:15px;font-weight:600;margin:0}
+.panel-head{display:flex;flex-wrap:wrap;gap:8px 20px;align-items:baseline;justify-content:space-between;margin-bottom:8px}
+.legend{display:flex;gap:16px;font-size:12px;color:var(--fg2)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:14px;height:2px;border-radius:1px}
+.chart{position:relative}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.tip{position:absolute;pointer-events:none;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:12px;box-shadow:0 4px 14px rgb(0 0 0 / .12);min-width:150px;display:grid;gap:4px;font-variant-numeric:tabular-nums}
+.tip[hidden]{display:none}
+.tip .d{font:500 11px var(--mono);color:var(--muted)}
+.tip .r{display:flex;align-items:center;gap:6px}
+.tip .r b{margin-left:auto;font:500 12px var(--mono)}
+.note{color:var(--muted);font-size:12px;margin:8px 0 0}
+details summary{cursor:pointer;font-weight:600;font-size:14px}
+.tbl{overflow-x:auto;margin-top:10px}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th,td{padding:7px 10px;text-align:right;border-bottom:1px solid var(--grid);white-space:nowrap}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:500}
+th:first-child,td:first-child{text-align:left}
+td{font:400 13px var(--mono)}
+.up-t{color:var(--up)} .down-t{color:var(--down)}
+footer{color:var(--muted);font-size:12px}
+@media (max-width:520px){.price{font-size:28px}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>NVIDIA y Figma en bolsa</h1>
+      <p class="sub" id="asof"></p>
+    </div>
+    <div class="seg" role="group" aria-label="Periodo" id="seg">
+      <button data-r="21">1M</button><button data-r="63">3M</button><button data-r="126">6M</button><button data-r="ytd">YTD</button><button data-r="all">1A</button>
+    </div>
+  </header>
+
+  <section class="cards" id="cards"></section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <h2>Rentabilidad comparada</h2>
+      <div class="legend" id="legend"></div>
+    </div>
+    <div class="chart" id="chart"></div>
+    <p class="note">Variación porcentual de cada acción desde el primer cierre del periodo. Se indexa a 0 % porque los precios están en escalas muy distintas.</p>
+  </section>
+
+  <section class="panel">
+    <details>
+      <summary>Últimas sesiones</summary>
+      <div class="tbl"><table id="tbl"></table></div>
+    </details>
+  </section>
+
+  <footer>Precios de cierre diarios en USD. Fuente: Yahoo Finance. Datos estáticos, no se actualizan en tiempo real. No es asesoramiento financiero.</footer>
+</div>
+
+<script>
+const DATA = {"NVDA":{"hi52":237.88,"lo52":164.27,"rows":[["2025-10-03",187.62],["2025-10-06",185.54],["2025-10-07",185.04],["2025-10-08",189.11],["2025-10-09",192.57],["2025-10-10",183.16],["2025-10-13",188.32],["2025-10-14",180.03],["2025-10-15",179.83],["2025-10-16",181.81],["2025-10-17",183.22],["2025-10-20",182.64],["2025-10-21",181.16],["2025-10-22",180.28],["2025-10-23",182.16],["2025-10-24",186.26],["2025-10-27",191.49],["2025-10-28",201.03],["2025-10-29",207.04],["2025-10-30",202.89],["2025-10-31",202.49],["2025-11-03",206.88],["2025-11-04",198.69],["2025-11-05",195.21],["2025-11-06",188.08],["2025-11-07",188.15],["2025-11-10",199.05],["2025-11-11",193.16],["2025-11-12",193.8],["2025-11-13",186.86],["2025-11-14",190.17],["2025-11-17",186.6],["2025-11-18",181.36],["2025-11-19",186.52],["2025-11-20",180.64],["2025-11-21",178.88],["2025-11-24",182.55],["2025-11-25",177.82],["2025-11-26",180.26],["2025-11-28",177.0],["2025-12-01",179.92],["2025-12-02",181.46],["2025-12-03",179.59],["2025-12-04",183.38],["2025-12-05",182.41],["2025-12-08",185.55],["2025-12-09",184.97],["2025-12-10",183.78],["2025-12-11",180.93],["2025-12-12",175.02],["2025-12-15",176.29],["2025-12-16",177.72],["2025-12-17",170.94],["2025-12-18",174.14],["2025-12-19",180.99],["2025-12-22",183.69],["2025-12-23",189.21],["2025-12-24",188.61],["2025-12-26",190.53],["2025-12-29",188.22],["2025-12-30",187.54],["2025-12-31",186.5],["2026-01-02",188.85],["2026-01-05",188.12],["2026-01-06",187.24],["2026-01-07",189.11],["2026-01-08",185.04],["2026-01-09",184.86],["2026-01-12",184.94],["2026-01-13",185.81],["2026-01-14",183.14],["2026-01-15",187.05],["2026-01-16",186.23],["2026-01-20",178.07],["2026-01-21",183.32],["2026-01-22",184.84],["2026-01-23",187.67],["2026-01-26",186.47],["2026-01-27",188.52],["2026-01-28",191.52],["2026-01-29",192.51],["2026-01-30",191.13],["2026-02-02",185.61],["2026-02-03",180.34],["2026-02-04",174.19],["2026-02-05",171.88],["2026-02-06",185.41],["2026-02-09",190.04],["2026-02-10",188.54],["2026-02-11",190.05],["2026-02-12",186.94],["2026-02-13",182.81],["2026-02-17",184.97],["2026-02-18",187.98],["2026-02-19",187.9],["2026-02-20",189.82],["2026-02-23",191.55],["2026-02-24",192.85],["2026-02-25",195.56],["2026-02-26",184.89],["2026-02-27",177.19],["2026-03-02",182.48],["2026-03-03",180.05],["2026-03-04",183.04],["2026-03-05",183.34],["2026-03-06",177.82],["2026-03-09",182.65],["2026-03-10",184.77],["2026-03-11",186.03],["2026-03-12",183.14],["2026-03-13",180.25],["2026-03-16",183.22],["2026-03-17",181.93],["2026-03-18",180.4],["2026-03-19",178.56],["2026-03-20",172.7],["2026-03-23",175.64],["2026-03-24",175.2],["2026-03-25",178.68],["2026-03-26",171.24],["2026-03-27",167.52],["2026-03-30",165.17],["2026-03-31",174.4],["2026-04-01",175.75],["2026-04-02",177.39],["2026-04-06",177.64],["2026-04-07",178.1],["2026-04-08",182.08],["2026-04-09",183.91],["2026-04-10",188.63],["2026-04-13",189.31],["2026-04-14",196.51],["2026-04-15",198.87],["2026-04-16",198.35],["2026-04-17",201.68],["2026-04-20",202.06],["2026-04-21",199.88],["2026-04-22",202.5],["2026-04-23",199.64],["2026-04-24",208.27],["2026-04-27",216.61],["2026-04-28",213.17],["2026-04-29",209.25],["2026-04-30",199.57],["2026-05-01",198.45],["2026-05-04",198.48],["2026-05-05",196.5],["2026-05-06",207.83],["2026-05-07",211.5],["2026-05-08",215.2],["2026-05-11",219.44],["2026-05-12",220.78],["2026-05-13",225.83],["2026-05-14",235.74],["2026-05-15",225.32],["2026-05-18",222.32],["2026-05-19",220.61],["2026-05-20",223.47],["2026-05-21",219.51],["2026-05-22",215.33],["2026-05-26",214.86],["2026-05-27",212.6],["2026-05-28",214.25],["2026-05-29",211.14],["2026-06-01",224.36],["2026-06-02",222.82],["2026-06-03",214.75],["2026-06-04",218.66],["2026-06-05",205.1],["2026-06-08",208.64],["2026-06-09",208.19],["2026-06-10",200.42],["2026-06-11",204.87],["2026-06-12",205.19],["2026-06-15",212.45],["2026-06-16",207.41],["2026-06-17",204.65],["2026-06-18",210.69],["2026-06-22",208.65],["2026-06-23",200.04],["2026-06-24",199.0],["2026-06-25",195.74],["2026-06-26",192.53],["2026-06-29",194.97],["2026-06-30",200.09],["2026-07-01",197.58],["2026-07-02",194.83],["2026-07-06",195.55],["2026-07-07",196.93],["2026-07-08",204.12],["2026-07-09",202.78],["2026-07-10",210.96],["2026-07-13",203.53],["2026-07-14",211.8],["2026-07-15",212.5],["2026-07-16",207.4],["2026-07-17",202.81],["2026-07-20",203.28],["2026-07-21",207.29],["2026-07-22",212.06],["2026-07-23",208.76],["2026-07-24",206.84],["2026-07-27",196.51],["2026-07-28",197.01],["2026-07-29",190.01],["2026-07-30",195.04],["2026-07-31",200.75],["2026-08-03",206.64],["2026-08-04",211.94],["2026-08-05",219.22],["2026-08-06",218.99],["2026-08-07",223.96],["2026-08-10",217.55],["2026-08-11",217.5],["2026-08-12",224.09],["2026-08-13",225.3],["2026-08-14",225.16],["2026-08-17",225.01],["2026-08-18",219.74],["2026-08-19",217.56],["2026-08-20",216.85],["2026-08-21",214.72],["2026-08-24",208.48],["2026-08-25",213.05],["2026-08-26",209.66],["2026-08-27",227.98],["2026-08-28",217.55],["2026-08-31",220.78],["2026-09-01",217.44],["2026-09-02",224.41],["2026-09-03",228.45],["2026-09-04",230.36],["2026-09-08",225.73],["2026-09-09",223.67],["2026-09-10",218.36],["2026-09-11",218.29],["2026-09-14",210.96],["2026-09-15",212.17],["2026-09-16",213.9],["2026-09-17",219.34],["2026-09-18",222.27],["2026-09-21",227.38],["2026-09-22",228.87],["2026-09-23",225.51],["2026-09-24",224.58],["2026-09-25",225.07],["2026-09-28",228.86],["2026-09-29",227.21],["2026-09-30",228.38],["2026-10-01",230.86],["2026-10-02",233.95]]},"FIG":{"hi52":71.48,"lo52":16.6,"rows":[["2025-10-03",53.04],["2025-10-06",56.96],["2025-10-07",60.84],["2025-10-08",71.08],["2025-10-09",67.94],["2025-10-10",61.06],["2025-10-13",64.28],["2025-10-14",60.82],["2025-10-15",63.82],["2025-10-16",57.79],["2025-10-17",56.84],["2025-10-20",55.71],["2025-10-21",55.71],["2025-10-22",52.81],["2025-10-23",53.35],["2025-10-24",53.36],["2025-10-27",53.14],["2025-10-28",51.89],["2025-10-29",50.81],["2025-10-30",48.84],["2025-10-31",49.84],["2025-11-03",48.17],["2025-11-04",45.81],["2025-11-05",44.01],["2025-11-06",45.98],["2025-11-07",44.25],["2025-11-10",44.42],["2025-11-11",44.48],["2025-11-12",44.0],["2025-11-13",40.56],["2025-11-14",38.53],["2025-11-17",37.38],["2025-11-18",36.76],["2025-11-19",35.74],["2025-11-20",33.57],["2025-11-21",34.31],["2025-11-24",35.47],["2025-11-25",35.5],["2025-11-26",36.13],["2025-11-28",35.97],["2025-12-01",35.69],["2025-12-02",36.18],["2025-12-03",37.37],["2025-12-04",38.71],["2025-12-05",37.97],["2025-12-08",37.65],["2025-12-09",38.47],["2025-12-10",39.26],["2025-12-11",38.69],["2025-12-12",36.07],["2025-12-15",35.08],["2025-12-16",35.94],["2025-12-17",37.36],["2025-12-18",36.99],["2025-12-19",39.48],["2025-12-22",39.25],["2025-12-23",38.39],["2025-12-24",38.86],["2025-12-26",38.54],["2025-12-29",37.83],["2025-12-30",37.63],["2025-12-31",37.37],["2026-01-02",37.61],["2026-01-05",37.07],["2026-01-06",37.49],["2026-01-07",37.26],["2026-01-08",37.27],["2026-01-09",37.33],["2026-01-12",36.4],["2026-01-13",33.56],["2026-01-14",32.36],["2026-01-15",31.6],["2026-01-16",29.57],["2026-01-20",27.76],["2026-01-21",27.07],["2026-01-22",28.42],["2026-01-23",28.93],["2026-01-26",29.17],["2026-01-27",28.46],["2026-01-28",30.06],["2026-01-29",27.07],["2026-01-30",25.92],["2026-02-02",24.0],["2026-02-03",21.39],["2026-02-04",22.51],["2026-02-05",22.2],["2026-02-06",21.99],["2026-02-09",22.13],["2026-02-10",24.1],["2026-02-11",22.57],["2026-02-12",22.02],["2026-02-13",22.53],["2026-02-17",23.1],["2026-02-18",24.19],["2026-02-19",25.86],["2026-02-20",26.09],["2026-02-23",24.75],["2026-02-24",27.43],["2026-02-25",31.24],["2026-02-26",30.22],["2026-02-27",29.39],["2026-03-02",29.29],["2026-03-03",30.74],["2026-03-04",29.64],["2026-03-05",30.3],["2026-03-06",29.11],["2026-03-09",30.48],["2026-03-10",28.35],["2026-03-11",27.84],["2026-03-12",26.17],["2026-03-13",26.03],["2026-03-16",27.16],["2026-03-17",27.45],["2026-03-18",25.26],["2026-03-19",24.22],["2026-03-20",23.73],["2026-03-23",23.2],["2026-03-24",21.87],["2026-03-25",21.09],["2026-03-26",22.15],["2026-03-27",20.19],["2026-03-30",20.16],["2026-03-31",21.14],["2026-04-01",20.42],["2026-04-02",21.27],["2026-04-06",21.42],["2026-04-07",21.19],["2026-04-08",20.15],["2026-04-09",19.08],["2026-04-10",18.16],["2026-04-13",19.18],["2026-04-14",18.42],["2026-04-15",20.34],["2026-04-16",20.32],["2026-04-17",18.92],["2026-04-20",19.01],["2026-04-21",18.72],["2026-04-22",19.17],["2026-04-23",17.32],["2026-04-24",17.47],["2026-04-27",17.31],["2026-04-28",17.18],["2026-04-29",16.86],["2026-04-30",17.7],["2026-05-01",18.74],["2026-05-04",19.96],["2026-05-05",19.42],["2026-05-06",19.29],["2026-05-07",20.56],["2026-05-08",20.66],["2026-05-11",20.05],["2026-05-12",19.33],["2026-05-13",18.94],["2026-05-14",20.24],["2026-05-15",22.92],["2026-05-18",24.36],["2026-05-19",23.27],["2026-05-20",22.58],["2026-05-21",21.59],["2026-05-22",22.71],["2026-05-26",21.96],["2026-05-27",21.34],["2026-05-28",23.46],["2026-05-29",25.5],["2026-06-01",27.12],["2026-06-02",24.29],["2026-06-03",22.79],["2026-06-04",22.51],["2026-06-05",21.75],["2026-06-08",21.1],["2026-06-09",20.49],["2026-06-10",19.79],["2026-06-11",19.34],["2026-06-12",18.54],["2026-06-15",18.51],["2026-06-16",17.98],["2026-06-17",18.65],["2026-06-18",18.88],["2026-06-22",19.08],["2026-06-23",18.99],["2026-06-24",18.64],["2026-06-25",16.84],["2026-06-26",18.62],["2026-06-29",19.08],["2026-06-30",18.09],["2026-07-01",19.49],["2026-07-02",21.34],["2026-07-06",21.08],["2026-07-07",22.19],["2026-07-08",21.67],["2026-07-09",22.26],["2026-07-10",21.11],["2026-07-13",23.65],["2026-07-14",23.86],["2026-07-15",23.5],["2026-07-16",23.41],["2026-07-17",23.95],["2026-07-20",24.02],["2026-07-21",21.93],["2026-07-22",21.47],["2026-07-23",20.0],["2026-07-24",21.12],["2026-07-27",22.94],["2026-07-28",24.38],["2026-07-29",24.76],["2026-07-30",23.76],["2026-07-31",24.32],["2026-08-03",24.92],["2026-08-04",27.12],["2026-08-05",28.15],["2026-08-06",23.97],["2026-08-07",23.29],["2026-08-10",25.39],["2026-08-11",24.87],["2026-08-12",23.75],["2026-08-13",26.35],["2026-08-14",25.42],["2026-08-17",24.99],["2026-08-18",26.01],["2026-08-19",26.79],["2026-08-20",27.31],["2026-08-21",27.1],["2026-08-24",27.44],["2026-08-25",27.27],["2026-08-26",27.03],["2026-08-27",30.62],["2026-08-28",28.82],["2026-08-31",27.49],["2026-09-01",27.2],["2026-09-02",25.73],["2026-09-03",25.22],["2026-09-04",24.12],["2026-09-08",22.75],["2026-09-09",22.01],["2026-09-10",22.14],["2026-09-11",23.2],["2026-09-14",23.91],["2026-09-15",23.88],["2026-09-16",23.06],["2026-09-17",23.29],["2026-09-18",22.69],["2026-09-21",22.33],["2026-09-22",21.8],["2026-09-23",21.76],["2026-09-24",21.34],["2026-09-25",20.85],["2026-09-28",20.25],["2026-09-29",20.72],["2026-09-30",21.02],["2026-10-01",21.57],["2026-10-02",21.36]]}};
+const SYMS = [
+  {k:'NVDA', label:'NVIDIA', exch:'NASDAQ', c:'--s1'},
+  {k:'FIG',  label:'Figma',  exch:'NYSE',   c:'--s2'}
+];
+const fmt$ = v => '$' + v.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmtP = v => (v>0?'+':v<0?'−':'') + Math.abs(v).toLocaleString('es-ES',{minimumFractionDigits:1,maximumFractionDigits:1}) + ' %';
+const fmtD = (s,o={day:'numeric',month:'short',year:'numeric'}) => new Date(s+'T12:00:00').toLocaleDateString('es-ES',o);
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const NS = 'http://www.w3.org/2000/svg';
+const el = (t,a={},p) => {const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);p&&p.appendChild(e);return e};
+
+let range = 'all';
+try{ range = localStorage.getItem('range') || 'all' }catch(e){}
+
+function slice(rows){
+  if(range==='all') return rows;
+  if(range==='ytd'){const y=rows[rows.length-1][0].slice(0,4);const i=rows.findIndex(r=>r[0]>=y+'-01-01');return rows.slice(Math.max(0,i-1));}
+  return rows.slice(-(+range+1));
+}
+
+document.getElementById('asof').textContent = 'Cierre del ' + fmtD(DATA.NVDA.rows.at(-1)[0],{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+function renderCards(){
+  const box = document.getElementById('cards'); box.innerHTML='';
+  for(const s of SYMS){
+    const d = DATA[s.k], rows = slice(d.rows), last = d.rows.at(-1)[1], prev = d.rows.at(-2)[1];
+    const day = (last/prev-1)*100, per = (last/rows[0][1]-1)*100;
+    const closes = rows.map(r=>r[1]), hi=Math.max(...closes), lo=Math.min(...closes);
+    const pos = (last-d.lo52)/(d.hi52-d.lo52)*100;
+    const card = document.createElement('article'); card.className='card';
+    card.innerHTML = `
+      <div class="card-head"><span class="sw" style="background:var(${s.c})"></span><span class="tick">${s.k}</span><span class="name">${s.label}</span><span class="exch">${s.exch}</span></div>
+      <div class="price-row"><span class="price">${fmt$(last)}</span>
+        <span class="pill ${day>=0?'up':'down'}" title="Variación del día">${day>=0?'▲':'▼'} ${fmtP(day)} hoy</span></div>
+      <div class="stats">
+        <div><span class="lbl">Periodo</span><b class="${per>=0?'up-t':'down-t'}">${fmtP(per)}</b></div>
+        <div><span class="lbl">Máx. periodo</span><b>${fmt$(hi)}</b></div>
+        <div><span class="lbl">Mín. periodo</span><b>${fmt$(lo)}</b></div>
+      </div>
+      <div class="range"><span class="lbl">Rango 52 semanas</span>
+        <div class="bar"><i style="left:${pos}%" title="Precio actual"></i></div>
+        <div class="range-l"><span>${fmt$(d.lo52)}</span><span>${pos.toFixed(0)} % del rango</span><span>${fmt$(d.hi52)}</span></div></div>`;
+    const sv = el('svg',{class:'spark',viewBox:'0 0 300 56',preserveAspectRatio:'none','aria-label':`Precio de ${s.label} en el periodo`,role:'img'});
+    const x=i=>i/(closes.length-1)*300, y=v=>52-(v-lo)/((hi-lo)||1)*46;
+    const line = closes.map((v,i)=>(i?'L':'M')+x(i).toFixed(1)+' '+y(v).toFixed(1)).join('');
+    const col = css(s.c);
+    el('path',{d:line+`L300 56L0 56Z`,fill:col,'fill-opacity':.1,stroke:'none'},sv);
+    el('path',{d:line,fill:'none',stroke:col,'stroke-width':2,'vector-effect':'non-scaling-stroke','stroke-linejoin':'round'},sv);
+    card.appendChild(sv);
+    box.appendChild(card);
+  }
+}
+
+function renderChart(){
+  const box = document.getElementById('chart'); box.innerHTML='';
+  const series = SYMS.map(s=>{const r=slice(DATA[s.k].rows);const b=r[0][1];return {...s,col:css(s.c),pts:r.map(([d,c])=>({d,c,p:(c/b-1)*100}))}});
+  const n = series[0].pts.length;
+  const W=Math.max(320,box.clientWidth||1000),H=Math.max(240,Math.round(W*0.36)),m={l:52,r:48,t:14,b:30};
+  const all = series.flatMap(s=>s.pts.map(p=>p.p));
+  let lo=Math.min(0,...all), hi=Math.max(0,...all);
+  const span=hi-lo, step=[5,10,20,25,50,100].find(s=>span/s<=6)||100;
+  lo=Math.floor(lo/step)*step; hi=Math.ceil(hi/step)*step;
+  const x=i=>m.l+i/(n-1)*(W-m.l-m.r), y=v=>m.t+(hi-v)/(hi-lo)*(H-m.t-m.b);
+  const svg = el('svg',{viewBox:`0 0 ${W} ${H}`,role:'img','aria-label':'Variación porcentual comparada de NVIDIA y Figma'},box);
+  const grid=css('--grid'), muted=css('--muted'), fg2=css('--fg2');
+  for(let v=lo;v<=hi+1e-9;v+=step){
+    el('line',{x1:m.l,x2:W-m.r,y1:y(v),y2:y(v),stroke:v===0?css('--line'):grid,'stroke-width':v===0?1.5:1},svg);
+    const t=el('text',{x:m.l-8,y:y(v)+4,'text-anchor':'end',fill:muted,'font-size':12,'font-family':css('--mono')},svg);t.textContent=(v>0?'+':v<0?'−':'')+Math.abs(v)+' %';
+  }
+  // x ticks: start of months
+  const pts=series[0].pts; let lastM='', every = W<600?(n>130?3:2):(n>130?2:1), k=0;
+  pts.forEach((p,i)=>{const mo=p.d.slice(0,7); if(mo!==lastM){ if(i>0 && (k++%every===0) && x(i)<W-m.r-20){
+    el('line',{x1:x(i),x2:x(i),y1:H-m.b,y2:H-m.b+4,stroke:muted},svg);
+    const t=el('text',{x:x(i),y:H-m.b+18,'text-anchor':'middle',fill:muted,'font-size':12,'font-family':css('--sans')},svg);
+    t.textContent=fmtD(p.d,{month:'short'})+(mo.endsWith('-01')?' '+mo.slice(2,4):'');}
+    lastM=mo;}});
+  for(const s of series){
+    el('path',{d:s.pts.map((p,i)=>(i?'L':'M')+x(i).toFixed(1)+' '+y(p.p).toFixed(1)).join(''),fill:'none',stroke:s.col,'stroke-width':2,'stroke-linejoin':'round'},svg);
+    const lp=s.pts.at(-1);
+    el('circle',{cx:x(n-1),cy:y(lp.p),r:4,fill:s.col,stroke:css('--surface'),'stroke-width':2},svg);
+  }
+  // direct end labels, nudged apart
+  const ends=series.map(s=>({s,yy:y(s.pts.at(-1).p)})).sort((a,b)=>a.yy-b.yy);
+  if(ends.length===2 && ends[1].yy-ends[0].yy<16){const mid=(ends[0].yy+ends[1].yy)/2;ends[0].yy=mid-8;ends[1].yy=mid+8;}
+  for(const e of ends){const t=el('text',{x:x(n-1)+9,y:e.yy+4,fill:fg2,'font-size':12,'font-weight':500,'font-family':css('--mono')},svg);t.textContent=e.s.k}
+
+  // hover layer
+  const cross=el('line',{y1:m.t,y2:H-m.b,stroke:muted,'stroke-dasharray':'3 3',visibility:'hidden'},svg);
+  const dots=series.map(s=>el('circle',{r:5,fill:s.col,stroke:css('--surface'),'stroke-width':2,visibility:'hidden'},svg));
+  const hit=el('rect',{x:m.l,y:m.t,width:W-m.l-m.r,height:H-m.t-m.b,fill:'transparent'},svg);
+  const tip=document.createElement('div');tip.className='tip';tip.hidden=true;box.appendChild(tip);
+  const move=ev=>{
+    const r=svg.getBoundingClientRect(), sx=(ev.clientX-r.left)/r.width*W;
+    const i=Math.max(0,Math.min(n-1,Math.round((sx-m.l)/(W-m.l-m.r)*(n-1))));
+    cross.setAttribute('x1',x(i));cross.setAttribute('x2',x(i));cross.setAttribute('visibility','visible');
+    series.forEach((s,j)=>{dots[j].setAttribute('cx',x(i));dots[j].setAttribute('cy',y(s.pts[i].p));dots[j].setAttribute('visibility','visible')});
+    tip.innerHTML=`<span class="d">${fmtD(pts[i].d)}</span>`+series.map(s=>`<div class="r"><span class="sw" style="background:${s.col}"></span>${s.label} <b>${fmt$(s.pts[i].c)}</b><b style="margin-left:6px;color:var(${s.pts[i].p>=0?'--up':'--down'})">${fmtP(s.pts[i].p)}</b></div>`).join('');
+    tip.hidden=false;
+    const px=x(i)/W*r.width, bw=box.clientWidth, tw=tip.offsetWidth;
+    tip.style.left=Math.min(Math.max(0,px+14>bw-tw?px-tw-14:px+14),bw-tw)+'px'; tip.style.top='8px';
+  };
+  hit.addEventListener('pointermove',move); hit.addEventListener('pointerdown',move);
+  hit.addEventListener('pointerleave',()=>{tip.hidden=true;cross.setAttribute('visibility','hidden');dots.forEach(d=>d.setAttribute('visibility','hidden'))});
+
+  document.getElementById('legend').innerHTML = series.map(s=>`<span><i style="background:${s.col}"></i>${s.label} <b class="${s.pts.at(-1).p>=0?'up-t':'down-t'}" style="font-family:var(--mono);font-weight:500">${fmtP(s.pts.at(-1).p)}</b></span>`).join('');
+}
+
+function renderTable(){
+  const a=DATA.NVDA.rows, b=DATA.FIG.rows, map=Object.fromEntries(b.map((r,i)=>[r[0],i]));
+  let h='<thead><tr><th>Fecha</th><th>NVDA cierre</th><th>NVDA var.</th><th>FIG cierre</th><th>FIG var.</th></tr></thead><tbody>';
+  for(let i=a.length-1;i>=a.length-15;i--){
+    const j=map[a[i][0]], va=(a[i][1]/a[i-1][1]-1)*100, vb=j?(b[j][1]/b[j-1][1]-1)*100:null;
+    h+=`<tr><td>${fmtD(a[i][0])}</td><td>${fmt$(a[i][1])}</td><td class="${va>=0?'up-t':'down-t'}">${fmtP(va)}</td><td>${j!=null?fmt$(b[j][1]):'—'}</td><td class="${vb>=0?'up-t':'down-t'}">${vb!=null?fmtP(vb):'—'}</td></tr>`;
+  }
+  document.getElementById('tbl').innerHTML=h+'</tbody>';
+}
+
+function render(){
+  document.querySelectorAll('#seg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.r===range));
+  renderCards(); renderChart();
+}
+document.getElementById('seg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;range=b.dataset.r;try{localStorage.setItem('range',range)}catch(e){}render()});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',render);
+new MutationObserver(render).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+let rz;addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(renderChart,120)});
+render(); renderTable();
+</script>
