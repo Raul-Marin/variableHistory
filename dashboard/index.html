@@ -8,17 +8,10 @@
   --fg:#111418; --fg2:#4f5560; --muted:#7a808a;
   --s1:#2a78d6; --s2:#eb6834;
   --up:#0a7d3c; --down:#c4322f;
+  color-scheme:light;
   --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
   --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
 }
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#121417; --surface:#1a1d21; --line:#2c3036; --grid:#24282d;
-  --fg:#f2f3f5; --fg2:#b9bec6; --muted:#8a9099;
-  --s1:#3987e5; --s2:#d95926; --up:#3fbf74; --down:#f0716e; color-scheme:dark}}
-:root[data-theme="dark"]{
-  --bg:#121417; --surface:#1a1d21; --line:#2c3036; --grid:#24282d;
-  --fg:#f2f3f5; --fg2:#b9bec6; --muted:#8a9099;
-  --s1:#3987e5; --s2:#d95926; --up:#3fbf74; --down:#f0716e; color-scheme:dark}
 body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:14px;line-height:1.45}
 .wrap{max-width:1080px;margin:0 auto;padding-inline:16px;padding-block:24px 40px;display:grid;gap:20px}
 header{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:end;justify-content:space-between}
@@ -229,8 +222,6 @@ function render(){
   renderCards(); renderChart();
 }
 document.getElementById('seg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;range=b.dataset.r;try{localStorage.setItem('range',range)}catch(e){}render()});
-matchMedia('(prefers-color-scheme: dark)').addEventListener('change',render);
-new MutationObserver(render).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
 let rz;addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(renderChart,120)});
 render(); renderTable();
 </script>
