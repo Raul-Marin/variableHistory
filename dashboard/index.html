@@ -1,8 +1,8 @@
-<title>Bolsa NVIDIA y Figma</title>
+<title>NVIDIA &amp; Figma Stocks</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: cabecera con selector de periodo → dos fichas de valor → gráfico comparativo indexado → tabla */
+/* Layout: header with period selector → two stock cards → indexed comparison chart → table */
 :root{
   --bg:#f6f7f8; --surface:#ffffff; --line:#e3e5e8; --grid:#eceef0;
   --fg:#111418; --fg2:#4f5560; --muted:#7a808a;
@@ -69,11 +69,11 @@ footer{color:var(--muted);font-size:12px}
 <div class="wrap">
   <header>
     <div>
-      <h1>NVIDIA y Figma en bolsa</h1>
+      <h1>NVIDIA &amp; Figma stock performance</h1>
       <p class="sub" id="asof"></p>
     </div>
-    <div class="seg" role="group" aria-label="Periodo" id="seg">
-      <button data-r="21">1M</button><button data-r="63">3M</button><button data-r="126">6M</button><button data-r="ytd">YTD</button><button data-r="all">1A</button>
+    <div class="seg" role="group" aria-label="Period" id="seg">
+      <button data-r="21">1M</button><button data-r="63">3M</button><button data-r="126">6M</button><button data-r="ytd">YTD</button><button data-r="all">1Y</button>
     </div>
   </header>
 
@@ -81,21 +81,21 @@ footer{color:var(--muted);font-size:12px}
 
   <section class="panel">
     <div class="panel-head">
-      <h2>Rentabilidad comparada</h2>
+      <h2>Relative performance</h2>
       <div class="legend" id="legend"></div>
     </div>
     <div class="chart" id="chart"></div>
-    <p class="note">Variación porcentual de cada acción desde el primer cierre del periodo. Se indexa a 0 % porque los precios están en escalas muy distintas.</p>
+    <p class="note">Percent change of each stock since the first close of the period. Both start at 0% because their prices are on very different scales.</p>
   </section>
 
   <section class="panel">
     <details>
-      <summary>Últimas sesiones</summary>
+      <summary>Recent sessions</summary>
       <div class="tbl"><table id="tbl"></table></div>
     </details>
   </section>
 
-  <footer>Precios de cierre diarios en USD. Fuente: Yahoo Finance. Datos estáticos, no se actualizan en tiempo real. No es asesoramiento financiero.</footer>
+  <footer>Daily closing prices in USD. Source: Yahoo Finance. Static data, not updated in real time. Not financial advice.</footer>
 </div>
 
 <script>
@@ -104,9 +104,9 @@ const SYMS = [
   {k:'NVDA', label:'NVIDIA', exch:'NASDAQ', c:'--s1'},
   {k:'FIG',  label:'Figma',  exch:'NYSE',   c:'--s2'}
 ];
-const fmt$ = v => '$' + v.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2});
-const fmtP = v => (v>0?'+':v<0?'−':'') + Math.abs(v).toLocaleString('es-ES',{minimumFractionDigits:1,maximumFractionDigits:1}) + ' %';
-const fmtD = (s,o={day:'numeric',month:'short',year:'numeric'}) => new Date(s+'T12:00:00').toLocaleDateString('es-ES',o);
+const fmt$ = v => '$' + v.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmtP = v => (v>0?'+':v<0?'−':'') + Math.abs(v).toLocaleString('en-US',{minimumFractionDigits:1,maximumFractionDigits:1}) + '%';
+const fmtD = (s,o={day:'numeric',month:'short',year:'numeric'}) => new Date(s+'T12:00:00').toLocaleDateString('en-US',o);
 const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const NS = 'http://www.w3.org/2000/svg';
 const el = (t,a={},p) => {const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);p&&p.appendChild(e);return e};
@@ -120,7 +120,7 @@ function slice(rows){
   return rows.slice(-(+range+1));
 }
 
-document.getElementById('asof').textContent = 'Cierre del ' + fmtD(DATA.NVDA.rows.at(-1)[0],{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+document.getElementById('asof').textContent = 'Close of ' + fmtD(DATA.NVDA.rows.at(-1)[0],{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 
 function renderCards(){
   const box = document.getElementById('cards'); box.innerHTML='';
@@ -133,16 +133,16 @@ function renderCards(){
     card.innerHTML = `
       <div class="card-head"><span class="sw" style="background:var(${s.c})"></span><span class="tick">${s.k}</span><span class="name">${s.label}</span><span class="exch">${s.exch}</span></div>
       <div class="price-row"><span class="price">${fmt$(last)}</span>
-        <span class="pill ${day>=0?'up':'down'}" title="Variación del día">${day>=0?'▲':'▼'} ${fmtP(day)} hoy</span></div>
+        <span class="pill ${day>=0?'up':'down'}" title="Change today">${day>=0?'▲':'▼'} ${fmtP(day)} today</span></div>
       <div class="stats">
-        <div><span class="lbl">Periodo</span><b class="${per>=0?'up-t':'down-t'}">${fmtP(per)}</b></div>
-        <div><span class="lbl">Máx. periodo</span><b>${fmt$(hi)}</b></div>
-        <div><span class="lbl">Mín. periodo</span><b>${fmt$(lo)}</b></div>
+        <div><span class="lbl">Period</span><b class="${per>=0?'up-t':'down-t'}">${fmtP(per)}</b></div>
+        <div><span class="lbl">Period high</span><b>${fmt$(hi)}</b></div>
+        <div><span class="lbl">Period low</span><b>${fmt$(lo)}</b></div>
       </div>
-      <div class="range"><span class="lbl">Rango 52 semanas</span>
-        <div class="bar"><i style="left:${pos}%" title="Precio actual"></i></div>
-        <div class="range-l"><span>${fmt$(d.lo52)}</span><span>${pos.toFixed(0)} % del rango</span><span>${fmt$(d.hi52)}</span></div></div>`;
-    const sv = el('svg',{class:'spark',viewBox:'0 0 300 56',preserveAspectRatio:'none','aria-label':`Precio de ${s.label} en el periodo`,role:'img'});
+      <div class="range"><span class="lbl">52-week range</span>
+        <div class="bar"><i style="left:${pos}%" title="Current price"></i></div>
+        <div class="range-l"><span>${fmt$(d.lo52)}</span><span>${pos.toFixed(0)}% of range</span><span>${fmt$(d.hi52)}</span></div></div>`;
+    const sv = el('svg',{class:'spark',viewBox:'0 0 300 56',preserveAspectRatio:'none','aria-label':`${s.label} price over the period`,role:'img'});
     const x=i=>i/(closes.length-1)*300, y=v=>52-(v-lo)/((hi-lo)||1)*46;
     const line = closes.map((v,i)=>(i?'L':'M')+x(i).toFixed(1)+' '+y(v).toFixed(1)).join('');
     const col = css(s.c);
@@ -163,11 +163,11 @@ function renderChart(){
   const span=hi-lo, step=[5,10,20,25,50,100].find(s=>span/s<=6)||100;
   lo=Math.floor(lo/step)*step; hi=Math.ceil(hi/step)*step;
   const x=i=>m.l+i/(n-1)*(W-m.l-m.r), y=v=>m.t+(hi-v)/(hi-lo)*(H-m.t-m.b);
-  const svg = el('svg',{viewBox:`0 0 ${W} ${H}`,role:'img','aria-label':'Variación porcentual comparada de NVIDIA y Figma'},box);
+  const svg = el('svg',{viewBox:`0 0 ${W} ${H}`,role:'img','aria-label':'Percent change of NVIDIA and Figma compared'},box);
   const grid=css('--grid'), muted=css('--muted'), fg2=css('--fg2');
   for(let v=lo;v<=hi+1e-9;v+=step){
     el('line',{x1:m.l,x2:W-m.r,y1:y(v),y2:y(v),stroke:v===0?css('--line'):grid,'stroke-width':v===0?1.5:1},svg);
-    const t=el('text',{x:m.l-8,y:y(v)+4,'text-anchor':'end',fill:muted,'font-size':12,'font-family':css('--mono')},svg);t.textContent=(v>0?'+':v<0?'−':'')+Math.abs(v)+' %';
+    const t=el('text',{x:m.l-8,y:y(v)+4,'text-anchor':'end',fill:muted,'font-size':12,'font-family':css('--mono')},svg);t.textContent=(v>0?'+':v<0?'−':'')+Math.abs(v)+'%';
   }
   // x ticks: start of months
   const pts=series[0].pts; let lastM='', every = W<600?(n>130?3:2):(n>130?2:1), k=0;
@@ -209,7 +209,7 @@ function renderChart(){
 
 function renderTable(){
   const a=DATA.NVDA.rows, b=DATA.FIG.rows, map=Object.fromEntries(b.map((r,i)=>[r[0],i]));
-  let h='<thead><tr><th>Fecha</th><th>NVDA cierre</th><th>NVDA var.</th><th>FIG cierre</th><th>FIG var.</th></tr></thead><tbody>';
+  let h='<thead><tr><th>Date</th><th>NVDA close</th><th>NVDA chg.</th><th>FIG close</th><th>FIG chg.</th></tr></thead><tbody>';
   for(let i=a.length-1;i>=a.length-15;i--){
     const j=map[a[i][0]], va=(a[i][1]/a[i-1][1]-1)*100, vb=j?(b[j][1]/b[j-1][1]-1)*100:null;
     h+=`<tr><td>${fmtD(a[i][0])}</td><td>${fmt$(a[i][1])}</td><td class="${va>=0?'up-t':'down-t'}">${fmtP(va)}</td><td>${j!=null?fmt$(b[j][1]):'—'}</td><td class="${vb>=0?'up-t':'down-t'}">${vb!=null?fmtP(vb):'—'}</td></tr>`;
