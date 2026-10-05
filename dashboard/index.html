@@ -4,11 +4,11 @@
 <style>
 /* Layout: header with period selector → two stock cards → indexed comparison chart → table */
 :root{
-  --bg:#f6f7f8; --surface:#ffffff; --line:#e3e5e8; --grid:#eceef0;
-  --fg:#111418; --fg2:#4f5560; --muted:#7a808a;
-  --s1:#2a78d6; --s2:#eb6834;
-  --up:#0a7d3c; --down:#c4322f;
-  color-scheme:light;
+  --bg:#121417; --surface:#1a1d21; --line:#2c3036; --grid:#24282d;
+  --fg:#f2f3f5; --fg2:#b9bec6; --muted:#8a9099;
+  --s1:#3987e5; --s2:#d95926;
+  --up:#3fbf74; --down:#f0716e;
+  color-scheme:dark;
   --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
   --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
 }
@@ -48,7 +48,7 @@ h1{font-size:22px;font-weight:600;margin:0;text-wrap:balance}
 .legend i{width:14px;height:2px;border-radius:1px}
 .chart{position:relative}
 .chart svg{display:block;width:100%;height:auto;overflow:visible}
-.tip{position:absolute;pointer-events:none;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:12px;box-shadow:0 4px 14px rgb(0 0 0 / .12);min-width:150px;display:grid;gap:4px;font-variant-numeric:tabular-nums}
+.tip{position:absolute;pointer-events:none;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:12px;box-shadow:0 4px 14px rgb(0 0 0 / .4);min-width:150px;display:grid;gap:4px;font-variant-numeric:tabular-nums}
 .tip[hidden]{display:none}
 .tip .d{font:500 11px var(--mono);color:var(--muted)}
 .tip .r{display:flex;align-items:center;gap:6px}
